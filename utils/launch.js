@@ -1,3 +1,4 @@
+import puppeteer from 'puppeteer-core';
 export async function getBrowser() {
   return puppeteer.launch({
     headless: 'new',
