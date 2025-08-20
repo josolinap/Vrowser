@@ -1,0 +1,15 @@
+{
+  "name": "virtual-browser-app",
+  "version": "1.0.0",
+  "description": "A lightweight virtual browser app using Puppeteer.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "puppeteer-core": "^21.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
