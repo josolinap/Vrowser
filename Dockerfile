@@ -9,7 +9,7 @@ RUN apk add --no-cache \
       harfbuzz \
       ca-certificates \
       ttf-freefont \
-      util-linux            # for swapon / swapoff
+      util-linux
 
 # ---------- Runtime ----------
 FROM base AS runtime
@@ -26,10 +26,10 @@ RUN dd if=/dev/zero of=/swapfile bs=1M count=512 && \
     chmod 600 /swapfile && \
     mkswap /swapfile
 
-# Turn swap on automatically every time the container starts
-RUN echo "/sbin/swapon /swapfile" >> /etc/local.d/00_swap.start && \
-    chmod +x /etc/local.d/00_swap.start && \
-    rc-update add local default
+# Enable swap at runtime via a simple startup script
+RUN mkdir -p /usr/local/bin && \
+    printf '#!/bin/sh\n/sbin/swapon /swapfile\nexec "$@"\n' > /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
 
 # Copy package files and install only production deps
 COPY package.json ./
@@ -50,4 +50,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
 
 EXPOSE 10000
 ENV PORT=10000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["node", "server.js"]
