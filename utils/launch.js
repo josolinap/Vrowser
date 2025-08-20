@@ -1,17 +1,15 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
+
 export async function getBrowser() {
   return puppeteer.launch({
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, // env var set in Dockerfile
     headless: 'new',
-    executablePath: '/usr/bin/google-chrome-stable',
     args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',   // key on Render
+      '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--disable-features=VizDisplayCompositor',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process'
+      '--disable-extensions',
+      '--disable-web-security'
     ]
   });
 }
