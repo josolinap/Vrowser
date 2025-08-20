@@ -27,7 +27,7 @@ WORKDIR /usr/src/app
 RUN groupadd -r pptruser && useradd -r -g pptruser pptruser
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY . .
 RUN chown -R pptruser:pptruser /usr/src/app
