@@ -6,4 +6,13 @@ export async function getBrowser() {
     executablePath: process.env.PUPPETEER_EXEC_PATH || '/usr/bin/google-chrome-stable',
     args: [
       '--no-sandbox',
-      '--disable-set
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-features=VizDisplayCompositor',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process'
+    ]
+  });
+}
