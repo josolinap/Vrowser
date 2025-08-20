@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 
 export async function getBrowser() {
   return puppeteer.launch({
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, // env var set in Dockerfile
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     headless: 'new',
     args: [
       '--no-sandbox',
