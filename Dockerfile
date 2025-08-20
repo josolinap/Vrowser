@@ -26,8 +26,8 @@ WORKDIR /usr/src/app
 # non-root user
 RUN groupadd -r pptruser && useradd -r -g pptruser pptruser
 
-COPY package*.json ./
-RUN npm install --omit=dev
+COPY package.json ./
+RUN yarn install --production
 
 COPY . .
 RUN chown -R pptruser:pptruser /usr/src/app
