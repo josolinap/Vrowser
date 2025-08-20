@@ -1,42 +1,53 @@
 # ---------- Base ----------
-FROM node:18-bookworm-slim AS base
+FROM node:18-alpine AS base
 
-# minimal runtime deps for Chrome
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl gnupg fonts-liberation libasound2 libatk-bridge2.0-0 \
-    libatk1.0-0 libatspi2.0-0 libcups2 libdbus-1-3 libdrm2 libgtk-3-0 \
-    libnspr4 libnss3 libx11-6 libxcomposite1 libxdamage1 libxext6 \
-    libxfixes3 libxrandr2 libgbm1 xdg-utils \
-  && rm -rf /var/lib/apt/lists/*
-
-# Google Chrome repo + install
-RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
-    gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] \
-    https://dl.google.com/linux/chrome/deb/ stable main" \
-    > /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends google-chrome-stable && \
-    rm -rf /var/lib/apt/lists/*
+# Install chromium and the tiny tools we need for swap
+RUN apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont \
+      util-linux            # for swapon / swapoff
 
 # ---------- Runtime ----------
 FROM base AS runtime
 WORKDIR /usr/src/app
 
-# create user AND its home directory
-RUN groupadd -r pptruser && useradd -r -g pptruser -d /home/pptruser -s /bin/bash pptruser \
- && mkdir -p /home/pptruser/Downloads \
- && chown -R pptruser:pptruser /home/pptruser
+# Create a low-privilege user
+RUN addgroup -S pptruser && \
+    adduser -S -G pptruser -h /home/pptruser pptruser && \
+    mkdir -p /home/pptruser/Downloads && \
+    chown -R pptruser:pptruser /home/pptruser
 
-COPY package.json ./
-RUN yarn install --production
+# Add 512 MB swap inside the container
+RUN dd if=/dev/zero of=/swapfile bs=1M count=512 && \
+    chmod 600 /swapfile && \
+    mkswap /swapfile
 
+# Turn swap on automatically every time the container starts
+RUN echo "/sbin/swapon /swapfile" >> /etc/local.d/00_swap.start && \
+    chmod +x /etc/local.d/00_swap.start && \
+    rc-update add local default
+
+# Copy package files and install only production deps
+COPY package.json yarn.lock ./
+RUN yarn install --production --frozen-lockfile && yarn cache clean
+
+# Copy source and fix permissions
 COPY . .
 RUN chown -R pptruser:pptruser /usr/src/app
 USER pptruser
 
+# Puppeteer will find chromium here
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_OPTIONS="--max-old-space-size=256"
+
+# Tiny health-check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD node -e "require('http').get('http://localhost:${PORT:-10000}/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+
 EXPOSE 10000
 ENV PORT=10000
 CMD ["node", "server.js"]
