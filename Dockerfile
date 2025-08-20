@@ -32,8 +32,8 @@ RUN echo "/sbin/swapon /swapfile" >> /etc/local.d/00_swap.start && \
     rc-update add local default
 
 # Copy package files and install only production deps
-COPY package.json yarn.lock ./
-RUN yarn install --production --frozen-lockfile && yarn cache clean
+COPY package.json ./
+RUN yarn install --production && yarn cache clean
 
 # Copy source and fix permissions
 COPY . .
