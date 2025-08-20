@@ -23,8 +23,10 @@ RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
 FROM base AS runtime
 WORKDIR /usr/src/app
 
-# non-root user
-RUN groupadd -r pptruser && useradd -r -g pptruser pptruser
+# create user AND its home directory
+RUN groupadd -r pptruser && useradd -r -g pptruser -d /home/pptruser -s /bin/bash pptruser \
+ && mkdir -p /home/pptruser/Downloads \
+ && chown -R pptruser:pptruser /home/pptruser
 
 COPY package.json ./
 RUN yarn install --production
