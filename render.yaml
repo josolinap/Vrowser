@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: headless-browser-api
+    env: docker
+    plan: standard # >= 1 GB RAM
+    dockerfilePath: ./Dockerfile
