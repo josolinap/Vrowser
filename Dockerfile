@@ -1,18 +1,18 @@
 FROM alpine:3.20
 
-# runtime packages only
+# 1. runtime packages only (no compilation)
 RUN apk add --no-cache \
       xvfb xauth xsetroot \
       chromium \
       x11vnc \
-      py3-websockify \
+      websockify \
       dumb-init \
       su-exec
 
-# lightweight user
+# 2. non-root user
 RUN adduser -D -s /bin/sh browser
 
-# startup script
+# 3. tiny startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
